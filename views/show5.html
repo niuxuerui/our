@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        
+        body,
+        html {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        canvas {
+            /* width: 100vw;   
+            height: 100vh; */
+            display: block;
+            /* width: 100%;
+            height: 100%; */
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas></canvas>
+</body>
+
+<script>
+    function random(min, max) {
+        return (max - min) * Math.random() + min; //随机数
+    }
+
+    function Ball(x, y) { //通过构造函数，可以实例化对象，一个对象有他的属性和方法
+        this.x = x;
+        this.y = y;
+        this.r = 30;
+        this.vr = random(-1, 0);
+        this.vx = random(-5, 5); //随机一个x速度
+        this.vy = random(-5, 5); //随机一个y速度
+        this.colorList = ["#c0f", "#f06", "#3f6", "#ff3", "#00f", "#f60"]; //颜色
+        this.color = this.colorList[Math.floor(random(0, 7))]; //向下取整
+        this.a = 1;
+        this.va = 0.95 //透明度
+        this.deg = Math.PI / 180;
+    }
+    Ball.prototype = {
+        update: function() { //数据模块，每次绘画，数据发生叠加改变
+            this.x += this.vx; //位置一直变化
+            this.y += this.vy;
+            this.a *= this.va; //透明度一直变淡
+            this.r += this.vr;
+            if (this.r < 0) {
+                this.r = 0;
+            }
+        },
+        draw: function(api) {
+            api.beginPath();
+            api.fillStyle = this.color;
+            api.globalAlpha = this.a;
+            api.globalCompositeOperation = "lighter"; //画布颜色递加
+            api.arc(this.x, this.y, this.r, 0 * this.deg, 360 * this.deg, false);
+            api.fill();
+            this.update();
+        }
+    }
+
+
+
+
+    function Canvas() {
+        this.can = document.querySelector("canvas"); //寻找满足字符串的第一个
+        this.api = this.can.getContext("2d");
+        this.ww = window.innerWidth;
+        this.hh = window.innerHeight;
+        this.arrList = [];
+        this.deg = Math.PI / 180;
+        console.log(this.can);
+        this.init();
+        //初始化操作
+
+    }
+    Canvas.prototype = {
+        init: function() {
+            this.view();
+            this.register();
+            this.main();
+        },
+        view: function() {
+            this.can.width = this.ww = window.innerWidth;
+            this.can.height = this.hh = window.innerHeight;
+        },
+        create: function(x, y) { //划过增加
+            this.arrList.push(new Ball(x, y)); //入栈,怎么清除小球，大小会变小，透明度变化，达到界限，就消失
+        },
+        main: function() { //渲染
+            this.api.clearRect(0, 0, this.ww, this.hh);
+            this.arrList.forEach((item) => { //每一项，下标，原数组  这里只要每个小球数据
+                item.draw(this.api); //垃圾参数
+            })
+            if (this.arrList.length > 100) {
+                this.arrList.shift(); //删除第一个
+            }
+            requestAnimationFrame(() => {
+                this.main()
+            }); //定时递归，每隔浏览器刷新频率调用函数，（间歇性的执行一段代码），9+
+
+        },
+        register: function() {
+            this.can.addEventListener("mousemove", function(e) {
+                this.create(e.clientX, e.clientY);
+            }.bind(this));
+
+            window.onresize = function() {
+                this.view();
+            }.bind(this)
+        }
+    }
+
+    new Canvas();
+</script>
+
+<!-- 需求，解决步骤 1.canvas的宽高适应变化（已解决 ？）
+   2.画圆操作
+     获取绘制环境
+     清空
+     画路径
+     填充
+   3.动画效果 ,每个小球都是一个对象，也是一个数据，有自己的属性，和自己的方法（也就是功能）
+   4.数据处理（一组一组数据，实时更新）;
+
+浏览器执行顺序：(单线程)
+1.很快的进行完，逐行解读
+2.进行事件的监听
+
+
+顺序
+1.改变宽高
+2.获取环境
+3.画圆操作
+-->
+
+</html>
