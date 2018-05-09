@@ -5,24 +5,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-
-    <title>Document</title>
+    <title>canvas星空连线-新奇老师</title>
 </head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    body,
+    html {
+        width: 100%;
+        height: 100%;
+    }
+    
+    canvas {
+        display: block;
+        /* width: 100%;
+        height: 100%; */
+        background: #000
+    }
+</style>
 
 <body>
-    <div class="wrap">
-        <header>
-            这是第一页
-        </header>
-        <section>
-            <div class="scroll">
+    <!-- 
+        canvas代替网站大量存在操作dom节点对象的操作或者特效或者游戏flash
+        
+        密闭空间只有一个全局变量 比如canvas
+        this 最大的好处是可以进行变量作用域的提升或者降级
+        动态this，谁包裹它，它指向谁
 
-            </div>
-        </section>
+        存储变量 优化计算 优化时间复杂度 优化空间复杂度
+        变量是定值，不用算
 
-    </div>
+        传统，改变所有原点的left，top；操作dom，浪费性能
+        canvas是怎么做的 怎么让点和物体运动 ===
+        =======一步一步来绘制，绘制到该位置，把之前的清除
+        ======让一个点不断地进行路径上面点的绘制，从而达到我们的目标值，然后不断地清除之前绘画的原始值
+
+        绘画增量  给一个随机的变量
+        用变量存储this 提高性能
+        
+        毛毛虫
+        再画一个点之前，先清除整个画布，然后在绘画下一个点
+        萤火虫
+
+        给一个边界，别让跑了
+        做一个碰撞检测，交集了以后，让他们回来
+        增量变负值
+        
+       那个符合条件，怎么连线  判断是不是直角三角形
+       连接直角3角形状
+       勾股定理 
+       上一个点
+
+       鼠标移入进行连线，怎么判断鼠标移入
+       在js代码里面 分2种行为情况的 一般要用到布尔值
+       在运动中做
+       鼠标点作为下一个点
 
 
+       1.逻辑清晰(编程的思维)
+       2.基本功扎实    俩都难
+     -->
+    <canvas id="canvas"></canvas>
+    <script>
+        //整个页面的命名空间
+        var Canvas = {
+
+            }
+            /*作者 牛雪瑞
+            时间 新奇老师
+            最后时间 3-21
+            */
+        Canvas.animate = {
+            //初始化 每个案例都要遵循
+            //this在当前canvas.animate的作用域下是全局变量
+            init: function() {
+                var canvas = document.getElementById("canvas");
+                this.ctx = canvas.getContext("2d");
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                this.cw = canvas.width;
+                this.ch = canvas.height;
+                this.num = 200; //创建小圆点的个数
+                this.data = []; //存储原点的数据
+                for (var i = 0; i < this.num; i++) {
+                    this.data[i] = {
+                        x: Math.random() * this.cw,
+                        y: Math.random() * this.ch,
+                        cX: Math.random() * 0.6 - 0.3,
+                        cY: Math.random() * 0.6 - 0.3
+                    }
+                    this.drawCircle(this.data[i].x, this.data[i].y);
+                }
+
+            },
+            //绘制粉色小点点
+            drawCircle: function(x, y) {
+                ctx = this.ctx;
+                ctx.save();
+                ctx.fillStyle = 'pink';
+                ctx.beginPath();
+                ctx.arc(x, y, .5, 0, Math.PI * 2, false);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            },
+            //小圆点运动
+            moveCircle: function() {
+                var self = this;
+                var cw = this.cw;
+                var ch = this.ch;
+                self.ctx.clearRect(0, 0, cw, ch) //先清除整个画布，然后在绘画下一个点
+                for (var i = 0; i < self.num; i++) { //上一个点的循环
+                    self.data[i].x += self.data[i].cX;
+                    self.data[i].y += self.data[i].cY;
+                    //碰撞的边界值检测   
+                    if (self.data[i].x > cw || self.data[i].x < 0) {
+                        self.data[i].cX = -self.data[i].cX;
+                    }
+                    if (self.data[i].y > ch || self.data[i].y < 0) {
+                        self.data[i].cY = -self.data[i].cY;
+                    }
+                    this.drawCircle(this.data[i].x, this.data[i].y);
+                    //用我们的勾股定理判断是否连线
+                    for (var j = i + 1; j < self.num; j++) { //下一个点的循环
+                        if (Math.pow(self.data[i].x - self.data[j].x, 2) + Math.pow(self.data[i].y - self.data[j].y, 2) <= 50 * 50) {
+                            self.drawLine(self.data[i].x, self.data[i].y, self.data[j].x, self.data[j].y, false)
+                        }
+                    }
+                    if (move.x) { //鼠标
+                        if (Math.pow(self.data[i].x - move.x, 2) + Math.pow(self.data[i].y - move.y, 2) <= 50 * 50) {
+                            self.drawLine(self.data[i].x, self.data[i].y, move.x, move.y, true)
+                        }
+                    }
+                }
+            },
+            drawLine: function(x1, y1, x2, y2, ismove) {
+                ctx = this.ctx;
+                ctx.save();
+                var color = ctx.createLinearGradient(x1, y1, x2, y2);
+                if (!ismove) {
+                    color.addColorStop(0, "green");
+                    color.addColorStop(1, "orange");
+                } else {
+                    color.addColorStop(0, "pink");
+                    color.addColorStop(1, "blue");
+                }
+
+                ctx.strokeStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+        var move = {};
+        document.addEventListener("mousemove", function(e) {
+            move.x = e.clientX;
+            move.y = e.clientY;
+        }, false);
+
+        Canvas.animate.init();
+        setInterval(function() {
+            Canvas.animate.moveCircle()
+        }, 13);
+    </script>
 </body>
 
 </html>

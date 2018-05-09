@@ -5,24 +5,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-
     <title>Document</title>
 </head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    canvas {
+        display: block;
+        background: #000;
+    }
+</style>
 
 <body>
-    <div class="wrap">
-        <header>
-            这是第一页
-        </header>
-        <section>
-            <div class="scroll">
-
-            </div>
-        </section>
-
-    </div>
-
-
+    <canvas class="canvas" width="" height="">
+        您的浏览器不支持画布，兼容高级浏览器
+    </canvas>
 </body>
 
 </html>
+<script>
+    function random(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function color(a) {
+        return `rgba(${ random(0, 255)},${ random(0, 255)},${ random(0, 255)},${a})`;
+    }
+    //兼容
+    window.requestAnimationFrame = (function() {
+        return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback) {
+            window.setTimeout(callback, 1000 / 60);
+        }
+    })()
+
+    var can = document.querySelector(".canvas"),
+        ctx = can.getContext('2d');
+    var h = can.height = window.innerHeight; //改变canvas为块级元素
+    var w = can.width = window.innerWidth;
+    var deg = Math.PI / 180;
+    var counts = 80; //30个小雨滴
+    var drags = []; //实例化的每一个雨滴对象
+    //1.缩放的事件
+    window.onresize = function() {
+        can.height = window.innerHeight;
+        can.width = window.innerWidth;
+    };
+    //2.创一个雨滴对象  再消失以后  在创建一个
+    function Dragyudi() {}
+    Dragyudi.prototype = {
+            init: function() { //初始化雨滴的属性值
+                this.x = random(0, w); //随机生成x坐标 0-屏幕宽
+                this.y = 0; //初始值
+                this.vy = random(2, 4); //下落的加速度
+                this.l = random(h * 0.8, h * 0.9); //落点 消失的y值
+                this.r = 1; //圆形的初始半径为1  不断地改变圆的半径 （1）散开  （2）不断透明  （3）从里到外 消失
+                this.vr = 1; //圆形的半径更新速度
+                this.a = 1; //圆形的初始透明值
+                this.va = 0.96; //圆形的透明度更新稀释速度
+            },
+            drag: function() { //绘制雨滴
+                if (this.y >= this.l) { //当雨滴下落到1的位置，绘制圆形
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false);
+                    ctx.strokeStyle = "rgba(0,255,255," + this.a + ")";
+                    // ctx.strokeStyle = color(0.5);
+                    ctx.stroke();
+                } else {
+                    // console.log(color())
+                    ctx.fillStyle = color(0.7); //设置填充方法的颜色
+                    ctx.fillRect(this.x, this.y, 5, 10);
+                }
+
+                this.update(); //绘制完，直接增加
+            },
+            update: function() { //更新雨滴坐标位置的方法
+                if (this.y < this.l) { //大于就消失
+                    this.y += this.vy; //更新y坐标
+                } else { //3.到了这个点(坐标)  绘制扩散圆
+                    if (this.a > 0.03) { //透明度会越来越小
+                        this.r += this.vr; //半径递增
+                        if (this.r > 50) { //当半径大于50的时候，开始改变圆形的透明度
+                            this.a *= this.va;
+                        }
+                    } else { //雨滴消失就重新初始化雨滴对象
+                        this.init();
+                    }
+                }
+
+            }
+        }
+        // var my1 = new Dragyudi(); //不断调用 就好了  改变位置
+        // my1.init(); //添加属性值
+        // my1.drag(); //绘制出来
+
+    //1.延迟实例化每个雨滴对象  延迟的添加数据
+    function setDrog() {
+        for (var i = 0; i < 30; i++) {
+
+            (function(j) { //j是形参
+                setTimeout(function() {
+                    // console.log(j);
+                    //添加实例化雨滴对象
+                    var my1 = new Dragyudi(); //不断调用 就好了  改变位置
+                    my1.init(); //添加属性值
+                    drags.push(my1); //把雨滴添加到drags数组里面
+                }, j * 300); //延迟200毫秒
+            })(i); //i是实参
+
+        }
+    }
+    setDrog();
+    //2.不断的更新雨滴的位置   不断地解读数据
+    show();
+
+    function show() {
+        //ctx.clearRect(0, 0, w, h);//清空画布  相当于绘制一个空白矩形
+        ctx.fillStyle = "rgba(0,0,0,.1)"; //不清空的情况
+        ctx.fillRect(0, 0, w, h); //绘制一个透明的矩形, 旧的被一层层累加，新绘制的被覆盖的少，就很亮
+        for (var i = 0; i < drags.length; i++) {
+            drags[i].drag(); //停止消失以后，从新生成
+            //长方形渐渐暗淡
+        }
+        requestAnimationFrame(show);
+    }
+</script>
