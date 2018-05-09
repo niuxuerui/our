@@ -1,0 +1,61 @@
+* {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+body,
+html,
+.wrap {
+    width: 100%;
+    height: 100%;
+}
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    text-align: center;
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    border-bottom: 1px solid #ccc;
+}
+
+footer {
+    text-align: center;
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    border-top: 1px solid #ccc;
+}
+
+section {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.scroll {
+    width: 100%;
+}
+
+.scroll ul {
+    width: 100%;
+    border-top: 1px solid green;
+    border-bottom: 1px solid green;
+}
+
+.scroll ul li {
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    border-bottom: 1px solid blue;
+}
+
+.scroll ul li a {
+    color: #000;
+}
